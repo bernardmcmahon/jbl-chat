@@ -6,3 +6,9 @@ WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install -r requirements.txt
 COPY . /code/
+
+WORKDIR /code/jbl_chat
+## Use Gunicorn to run the application.
+RUN python manage.py collectstatic --noinput
+CMD gunicorn jbl_chat.wsgi:application --bind 0.0.0.0:${PORT:-8000}
+CMD ./manage.py collectstatic

@@ -1,3 +1,7 @@
 Django==4.2.20  # https://www.djangoproject.com/
 djangorestframework # https://github.com/encode/django-rest-framework
 drf-spectacular==0.28.0 # https://drf-spectacular.readthedocs.io/en/latest/index.html
+neapolitan==24.8 # https://github.com/carltongibson/neapolitan?tab=readme-ov-file
+django-htmx==1.22.0 # https://django-htmx.readthedocs.io/en/latest/index.html
+django-template-partials==24.4 # https://github.com/carltongibson/django-template-partials
+gunicorn>=20.0.4
