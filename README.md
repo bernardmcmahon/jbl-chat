@@ -15,3 +15,64 @@ We have provided a Django skeleton project along with Docker setup for your conv
 Incorporating HTMX will allow you to create dynamic, interactive elements on the front end without needing to reload the page. We encourage you to think about how HTMX can enhance user interactions effectively.
 
 Please submit your solution as a pull request to our public repository. Happy coding!
+
+
+---
+
+# LOCAL DEVELOPMENT SETUP
+
+This guide explains how to set up and run the application locally using Docker and Docker Compose.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Building and Running the Application
+
+1. **Build and start the containers:**
+
+   ```bash
+   docker compose build && docker compose up
+   ```
+
+2. **Connect to the running Docker container:**
+
+   ```bash
+   docker compose exec web bash
+   ```
+
+3. **Navigate to the application directory:**
+
+   ```bash
+   cd jbl_chat/
+   ```
+
+### Database Setup
+
+1. **Run database migrations:**
+
+   ```bash
+   ./manage.py migrate
+   ```
+
+2. **Import fake users and set all their passwords to 'admin':**
+
+   ```bash
+   ./manage.py loaddata fixtures/local_development_users.json
+   ./manage.py set_default_passwords
+   ```
+
+3. **Access the Django admin panel by opening:**
+
+   http://0.0.0.0:8000/admin/
+
+
+4. **Login with:**
+   - **Username:** admin
+   - **Password:** admin
+
+
+### Local API docs and testing
+
+In order to create new api documentation and to run it locally follow the instructions here: https://drf-spectacular.readthedocs.io/en/latest/readme.html#take-it-for-a-spin
