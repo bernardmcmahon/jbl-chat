@@ -9,7 +9,12 @@ COPY . /code/
 
 WORKDIR /code/jbl_chat
 
-RUN python manage.py collectstatic --noinput
+RUN ./manage.py collectstatic --noinput
+RUN ./manage.py migrate
+RUN ./manage.py loaddata fixtures/local_development_users.json
+RUN ./manage.py set_default_passwords
+RUN ./manage.py make_messages_fixture
+RUN ./manage.py loaddata messages_fixture.json
 
 ## Use Gunicorn to run the application.
 CMD gunicorn jbl_chat.wsgi:application --bind 0.0.0.0:${PORT:-8000}
