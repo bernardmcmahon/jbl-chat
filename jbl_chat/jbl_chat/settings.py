@@ -48,7 +48,6 @@ INSTALLED_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'drf_spectacular',
-    'neapolitan',
     'template_partials',
 ]
 
@@ -67,18 +66,29 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'jbl_chat.urls'
 
+
+
+default_loaders = [
+    "django.template.loaders.filesystem.Loader",
+    "django.template.loaders.app_directories.Loader",
+]
+
+cached_loaders = [("django.template.loaders.cached.Loader", default_loaders)]
+partial_loaders = [("template_partials.loader.Loader", cached_loaders)]
+
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
+            "debug": True,
+            "loaders": partial_loaders,
         },
     },
 ]
@@ -145,6 +155,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#std-setting-AUTH_USER_MODEL
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+LOGIN_URL = '/admin/login/'
 
 # DJANGO REST FRAMEWORK
 # https://www.django-rest-framework.org/api-guide/settings/

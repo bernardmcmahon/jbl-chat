@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+{% load static %}
+{% load partials %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JBL Chat{% endblock %}</title>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <!-- Tailwind CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen flex flex-col"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<!-- Top Header -->
+<header class="bg-white shadow  flex-none">
+    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <!-- App Title -->
+        <h1 class="text-xl font-bold">{% block header_title %}JBL Chat{% endblock %}</h1>
+        <div class="flex items-center"><a href="{% url 'logout' %}?next={% url 'home' %}">Logout - {{ request.user }}</a>
+            <!-- Mobile: Sidebar Toggle Button -->
+            <button id="sidebarToggle" class="md:hidden mr-4 focus:outline-none" aria-label="Toggle Navigation">
+                <!-- Simple hamburger icon -->
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+        </div>
+    </div>
+</header>
+
+<!-- Main Layout -->
+<div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white w-full md:w-64 border-r border-gray-200 hidden md:block">
+
+        <div class="p-4">
+            <h2 class="text-lg font-semibold mb-4">Contacts</h2>
+            <nav>
+                <ul>
+                    {% partialdef conversation-menu %}
+                        {% for other_user in other_users %}
+                        <li class="mb-2 {% if other_user_id == other_user.id %}active{% endif %}"
+                            id="other_user_{{ other_user.id }}">
+                            {% if not request.user.is_superuser %}
+                            <a hx-trigger="click"
+                               hx-target="#message-list"
+                               hx-push-url="false"
+                               hx-get="{% url 'messages_with' other_user.id %}"
+                               hx-swap="outerHTML" class="text-gray-700 hover:text-blue-500 block">{{ other_user }}</a>
+                            {% else %}
+                            <a href="{% url 'login_as_user' other_user.id %}">login as {{ other_user }}</a>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    {% endpartialdef %}
+                    <div hx-push-url="false"
+                         hx-get="{% url 'other_users' %}"
+                         hx-target="this"
+                         hx-swap="innerHTML" hx-trigger="load">
+                    </div>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4">
+
+        {% partialdef date-seperator %}
+
+            <div class="text-center my-4">
+              <span class="bg-green-200 px-3 py-1 rounded-full text-sm text-gray-700">
+
+                {% if needs_today_header or message.sent_at|date:"Y-m-d" == today_date  %}
+                  Today
+                {% elif message.sent_at > week_ago %}
+                  {{ message.sent_at|date:"l" }}
+                {% else %}
+                  {{ message.sent_at|date:"F j, Y" }}
+                {% endif %}
+              </span>
+            </div>
+
+        {% endpartialdef %}
+
+
+        {% partialdef message %}
+        <div id="message_{{ message.id }}" hx-preserve>
+            {% if messages %}
+            {% ifchanged message.sent_at|date:"Y-m-d" %}
+            {% partial date-seperator %}
+            {% endifchanged %}
+            {% else %}
+            {% if needs_today_header %}
+            {% partial date-seperator %}
+            {% endif %}
+            {% endif %}
+            <div class="mb-4 flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %}">
+                <div class="{% if message.sender == user %}bg-blue-600 text-white{% else %}bg-gray-200 text-gray-800{% endif %} rounded-lg px-4 py-2 max-w-xs">
+                    <p class="text-sm">{{ message.content }}</p>
+                    <p class="text-xs text-gray-400 {% if message.sender == user %}text-right{% endif %}">
+                        {{ message.sent_at|date:"H:i" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% if swap_oob_message_add_form %}
+        {% partial messages-add %}
+        {% endif %}
+        {% endpartialdef %}
+
+        {% partialdef messages-add %}
+        <form method="POST"
+              id="message_form" hx-post="{% url 'add_message' %}"
+              hx-target="#messages" hx-swap="beforeend" method="POST"
+              class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+              {% if swap_oob_message_add_form %}hx-swap-oob="true" {% endif %}>
+
+            <div class="mb-4">
+                <label for="content" class="block text-gray-700 text-sm font-bold mb-2">
+                    Message
+                </label>
+                <textarea id="content" name="content" placeholder="Enter your message"
+                          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+            </div>
+            <input type="hidden" name="recipient" value="{{ other_user_id }}">
+            <div class="flex items-center justify-between">
+                <button type="submit"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Send
+                </button>
+            </div>
+        </form>
+        {% endpartialdef %}
+
+        {% partialdef messages %}
+        <div id="messages" hx-trigger="every 1s"
+             hx-target="this"
+             hx-push-url="false"
+             hx-get="{% url 'new_messages_with' other_user_id %}"
+             hx-swap="outerHTML">
+            {% for message in messages %}
+            {% partial message %}
+            {% endfor %}
+        </div>
+        {% endpartialdef %}
+        {% partialdef messages-list %}
+
+        <div id="message-list">
+
+            <div class="w-full lg:w-1/2 mx-auto py-6">
+                <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="px-4 py-5">
+
+                        {% partial messages %}
+
+                        {% partial messages-add %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endpartialdef %}
+        <div id="message-list">
+        </div>
+    </main>
+</div>
+
+<!-- Optional: Extra body content -->
+{% block extra_body %}{% endblock %}
+
+<!-- Responsive Sidebar Toggle Script -->
+<script>
+    document.getElementById("sidebarToggle").addEventListener("click", function () {
+        var sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("hidden");
+    });
+</script>
+<script>
+    // Create an observer instance that watches for new nodes being added.
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                // Ensure we only work with element nodes.
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    // Check if the added node is the message_form or contains it.
+                    const messageForm = node.matches('#message_form')
+                        ? node
+                        : node.querySelector('#message_form');
+                    if (messageForm) {
+                        messageForm.scrollIntoView({behavior: 'smooth'});
+                    }
+                }
+            });
+        });
+    });
+
+    // Start observing the entire body for added child elements.
+    observer.observe(document.body, {childList: true, subtree: true});
+</script>
+
+</body>
+</html>
