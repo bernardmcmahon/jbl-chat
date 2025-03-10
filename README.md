@@ -76,3 +76,35 @@ This guide explains how to set up and run the application locally using Docker a
 ### Local API docs and testing
 
 In order to create new api documentation and to run it locally follow the instructions here: https://drf-spectacular.readthedocs.io/en/latest/readme.html#take-it-for-a-spin
+
+
+
+# LIVE TEST APPLICATION
+
+## Admin interface access
+
+A default admin user has been created for assessment purposes.
+- **Username:** admin
+- **Password:** admin
+
+Log in via the Django admin at:
+   https://jbl-chat.onrender.com//admin/
+   or 
+   https://jbl-chat.onrender.com/
+
+## API Documentation
+
+Explore and test the API using:
+- **Redoc:**   https://jbl-chat.onrender.com/api/docs/redoc/
+- **Swagger:** https://jbl-chat.onrender.com/api/docs/swagger/
+
+## Testing the system as different Users
+
+For testing, you may first log in as admin, and then switch to another user.
+
+Once logged in as a different user you can select a user to chat to.
+
+In this way you can open two browsers and login as a different user in each and chat between users.
+
+
+---
